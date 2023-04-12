@@ -6,35 +6,6 @@ import (
 )
 
 func main() {
-	// url := "http://localhost:8080/v1/users/login"
-
-	// // Dữ liệu gửi đi
-	// data := map[string]interface{}{
-	// 	"username": "tuanuet1",
-	// 	"password": "123456",
-	// }
-
-	// // Gọi hàm CallAPIPOST và xử lý phản hồi từ server
-	// respData, err := api.CallAPIPOST(url, data)
-	// if err != nil {
-	// 	fmt.Println("Lỗi khi gọi RESTful API:", err)
-	// 	return
-	// }
-
-	// // Xử lý respData, đây là dữ liệu phản hồi từ server
-	// fmt.Println("Phản hồi từ server:", string(respData))
-	// url := "http://localhost:8080/v1/users"
-
-	// // Gọi hàm CallAPIGET và xử lý phản hồi từ server
-	// respData, err := api.CallAPIGET(url)
-	// if err != nil {
-	// 	fmt.Println("Lỗi khi gọi RESTful API:", err)
-	// 	return
-	// }
-
-	// // Xử lý respData, đây là dữ liệu phản hồi từ server
-	// fmt.Println("Phản hồi từ server:", string(respData))
-
 	s := newServer()
 	go s.run()
 
