@@ -144,7 +144,7 @@ func (s *server) login(c *client, args []string) {
 	c.nick = args[1]
 	//args[1] la username
 	//args[2] la password
-	url := "http://localhost:8080/v1/users/login"
+	url := common.URL_LOGIN
 
 	// Dữ liệu gửi đi
 	data := map[string]interface{}{
@@ -185,7 +185,7 @@ func (s *server) register(c *client, args []string) {
 	c.nick = args[1]
 	//args[1] la username
 	//args[2] la password
-	url := "http://localhost:8080/v1/users/register"
+	url := common.URL_REGISTER
 
 	// Dữ liệu gửi đi
 	data := map[string]interface{}{
@@ -221,7 +221,7 @@ func (s *server) play(c *client) {
 	if len(s.game.player) == 2 {
 		c.msg("ready to play")
 		//goi api create game
-		url := "http://localhost:8080/v1/games"
+		url := common.URL_PLAY_GAME
 
 		// Dữ liệu gửi đi
 		data := map[string]interface{}{
@@ -275,7 +275,7 @@ func (s *server) move(c *client, args []string) {
 		c.msg("move is invalid")
 		return
 	}
-	url := "http://localhost:8080/v1/games/AddMove/" + common.IntToString(s.game.IdGame)
+	url := common.URL_ADD_MOVE + common.IntToString(s.game.IdGame)
 
 	// Dữ liệu gửi đi
 	data := map[string]interface{}{
@@ -313,7 +313,7 @@ func (s *server) move(c *client, args []string) {
 func checkWin(c *client, s *server) {
 	idGame := common.IntToString(s.game.IdGame)
 
-	url := "http://localhost:8080/v1/games/CheckWin/" + idGame
+	url := common.URL_CHECK_WIN + idGame
 
 	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
 	respData, err := api.CallAPIGET(url)
@@ -335,7 +335,8 @@ func checkWin(c *client, s *server) {
 		c.room.broadcastAll(c, "Continue Play")
 	} else {
 		playerWinner := common.IntToString(responseData.IdWinner)
-		url2 := "http://localhost:8080/v1/users/" + playerWinner
+
+		url2 := common.URL_GET_USER_BY_ID + playerWinner
 		respData1, err := api.CallAPIGET(url2)
 		if err != nil {
 			fmt.Println("Lỗi khi gọi RESTful API:", err)
@@ -354,7 +355,7 @@ func (s *server) history(c *client) {
 
 	idPlayer := common.IntToString(c.idUser)
 
-	url := "http://localhost:8080/v1/games/GetHistory/" + idPlayer
+	url := common.URL_GET_HISTORY + idPlayer
 
 	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
 	respData, err := api.CallAPIGET(url)
@@ -388,7 +389,7 @@ func (s *server) rate(c *client, args []string) {
 		c.msg("input invalid")
 		return
 	}
-	url := "http://localhost:8080/v1/games/history/" + args[1]
+	url := common.URL_GET_RATE + args[1]
 
 	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
 	respData, err := api.CallAPIGET(url)
@@ -423,7 +424,7 @@ func (s *server) time(c *client) {
 
 	idPlayer := common.IntToString(c.idUser)
 
-	url := "http://localhost:8080/v1/games/time/" + idPlayer
+	url := common.URL_GET_TIME + idPlayer
 
 	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
 	respData, err := api.CallAPIGET(url)
