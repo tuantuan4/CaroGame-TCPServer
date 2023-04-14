@@ -84,6 +84,12 @@ func (c *client) readInput() {
 				id:     CMD_HISTORY,
 				client: c,
 			}
+		case "/rate":
+			c.commands <- command{
+				id:     CMD_RATE,
+				client: c,
+				args:   args,
+			}
 		default:
 			c.err(fmt.Errorf("unknown command: %s", cmd))
 		}

@@ -46,6 +46,8 @@ func (s *server) run() {
 			s.move(cmd.client, cmd.args)
 		case CMD_HISTORY:
 			s.history(cmd.client)
+		case CMD_RATE:
+			s.rate(cmd.client, cmd.args)
 		}
 	}
 }
@@ -133,6 +135,10 @@ func (s *server) quitCurrentRoom(c *client) {
 }
 
 func (s *server) login(c *client, args []string) {
+	if len(args) > 3 || len(args) <= 2 {
+		c.msg("input invalid")
+		return
+	}
 	c.nick = args[1]
 	//args[1] la username
 	//args[2] la password
@@ -143,7 +149,6 @@ func (s *server) login(c *client, args []string) {
 		"username": args[1],
 		"password": args[2],
 	}
-
 	// Gọi hàm CallAPIPOST và xử lý phản hồi từ server
 	respData, err := api.CallAPIPOST(url, data)
 	if err != nil {
@@ -153,6 +158,7 @@ func (s *server) login(c *client, args []string) {
 	type ResponseData struct {
 		Message string `json:"message"`
 		Id      int    `json:"ID"`
+		Error   string `json:"error"`
 	}
 	var responseData ResponseData
 	err = json.Unmarshal(respData, &responseData)
@@ -164,12 +170,16 @@ func (s *server) login(c *client, args []string) {
 		c.idUser = responseData.Id
 		c.msg("Login success")
 		c.msg(fmt.Sprintf("all right, I will call you %s", c.nick))
-	} else {
-		c.msg("Login failed")
+	} else if responseData.Error == "Invalid user or password" {
+		c.msg("username and password is invalid")
 	}
 }
 
 func (s *server) register(c *client, args []string) {
+	if len(args) > 3 || len(args) <= 2 {
+		c.msg("input invalid")
+		return
+	}
 	c.nick = args[1]
 	//args[1] la username
 	//args[2] la password
@@ -189,6 +199,7 @@ func (s *server) register(c *client, args []string) {
 	}
 	type ResponseData struct {
 		Message string `json:"message"`
+		Error   string `json:"error"`
 	}
 	var responseData ResponseData
 	err = json.Unmarshal(respData, &responseData)
@@ -198,8 +209,8 @@ func (s *server) register(c *client, args []string) {
 	}
 	if responseData.Message == "register successful" {
 		c.msg("register successful")
-	} else {
-		c.msg("register failed")
+	} else if responseData.Error == "User already exists" {
+		c.msg("User already exists")
 	}
 }
 
@@ -234,8 +245,7 @@ func (s *server) play(c *client) {
 		}
 		if responseData.Message == "create game is success" {
 			s.game.IdGame = responseData.Data
-			msg := "ready to play"
-			c.room.broadcastAll(c, msg)
+			c.room.broadcastAll(c, "ready to play")
 		} else {
 			c.msg("Create game is failed")
 		}
@@ -249,18 +259,27 @@ func (s *server) move(c *client, args []string) {
 		c.msg("message is required, usage: /msg MSG")
 		return
 	}
+	if len(args) != 3 {
+		c.msg("input move invalid, please retype")
+		return
+	}
 	if len(args[1]) != 1 || len(args[2]) != 1 {
 		c.msg("move is invalid, please re-enter")
 		return
 	}
-
+	x := common.StringToInt(args[1])
+	y := common.StringToInt(args[2])
+	if x >= 3 || x < 0 || y >= 3 || y < 0 {
+		c.msg("move is invalid")
+		return
+	}
 	url := "http://localhost:8080/v1/games/AddMove/" + common.IntToString(s.game.IdGame)
 
 	// Dữ liệu gửi đi
 	data := map[string]interface{}{
 		"player_id":    c.idUser,
-		"x_coordinate": common.StringToInt(args[1]),
-		"y_coordinate": common.StringToInt(args[2]),
+		"x_coordinate": x,
+		"y_coordinate": y,
 	}
 
 	// Gọi hàm CallAPIPOST và xử lý phản hồi từ server
@@ -337,10 +356,63 @@ func (s *server) history(c *client) {
 
 	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
 	respData, err := api.CallAPIGET(url)
+	type ResponseData struct {
+		Draw     int    `json:"draw"`
+		Lose     int    `json:"lose"`
+		Username string `json:"username"`
+		Win      int    `json:"win"`
+	}
+	var responseData ResponseData
+	err = json.Unmarshal(respData, &responseData)
 	if err != nil {
 		fmt.Println("Lỗi khi gọi RESTful API:", err)
 		return
 	}
+	resultHistory := "Username: " + responseData.Username + "............." + "\n" +
+		"Win: " + common.IntToString(responseData.Win) + "\n" +
+		"Draw: " + common.IntToString(responseData.Draw) + "\n" +
+		"Lose: " + common.IntToString(responseData.Lose)
+	c.msg(resultHistory)
+}
 
-	c.msg(string(respData))
+func (s *server) rate(c *client, args []string) {
+
+	// idPlayer := common.IntToString(c.idUser)
+	if len(args) < 2 {
+		c.msg("message is required, usage: /msg MSG")
+		return
+	}
+	if len(args) != 2 {
+		c.msg("input invalid")
+		return
+	}
+	url := "http://localhost:8080/v1/games/history/" + args[1]
+
+	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
+	respData, err := api.CallAPIGET(url)
+	type ResponseData struct {
+		Draw     string `json:"draw"`
+		Lose     string `json:"lose"`
+		Username string `json:"username"`
+		Win      string `json:"win"`
+		Sum      int    `json:"sum"`
+		Error    string `json:"error`
+	}
+	var responseData ResponseData
+	err = json.Unmarshal(respData, &responseData)
+	if err != nil {
+		fmt.Println("Lỗi khi gọi RESTful API:", err)
+		return
+	}
+	if responseData.Error == "Username not found" {
+		c.msg("Username not found")
+		return
+	}
+
+	resultHistory :=
+		"Win: " + responseData.Win + "\n" +
+			"Draw: " + responseData.Draw + "\n" +
+			"Lose: " + responseData.Lose + "\n" +
+			"Sum: " + common.IntToString(responseData.Sum)
+	c.msg(resultHistory)
 }

@@ -13,6 +13,7 @@ const (
 	CMD_PLAY
 	CMD_MOVE
 	CMD_HISTORY
+	CMD_RATE
 )
 
 type command struct {
