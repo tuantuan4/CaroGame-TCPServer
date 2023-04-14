@@ -14,6 +14,7 @@ const (
 	CMD_MOVE
 	CMD_HISTORY
 	CMD_RATE
+	CMD_TIME
 )
 
 type command struct {

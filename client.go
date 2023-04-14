@@ -90,6 +90,11 @@ func (c *client) readInput() {
 				client: c,
 				args:   args,
 			}
+		case "/time":
+			c.commands <- command{
+				id:     CMD_TIME,
+				client: c,
+			}
 		default:
 			c.err(fmt.Errorf("unknown command: %s", cmd))
 		}

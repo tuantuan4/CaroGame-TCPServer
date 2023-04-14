@@ -48,6 +48,8 @@ func (s *server) run() {
 			s.history(cmd.client)
 		case CMD_RATE:
 			s.rate(cmd.client, cmd.args)
+		case CMD_TIME:
+			s.time(cmd.client)
 		}
 	}
 }
@@ -415,4 +417,25 @@ func (s *server) rate(c *client, args []string) {
 			"Lose: " + responseData.Lose + "\n" +
 			"Sum: " + common.IntToString(responseData.Sum)
 	c.msg(resultHistory)
+}
+
+func (s *server) time(c *client) {
+
+	idPlayer := common.IntToString(c.idUser)
+
+	url := "http://localhost:8080/v1/games/time/" + idPlayer
+
+	// Gọi hàm CallAPIGET và xử lý phản hồi từ server
+	respData, err := api.CallAPIGET(url)
+	type ResponseData struct {
+		Data string `json:"data"`
+	}
+	var responseData ResponseData
+	err = json.Unmarshal(respData, &responseData)
+	if err != nil {
+		fmt.Println("Lỗi khi gọi RESTful API:", err)
+		return
+	}
+	resultTime := responseData.Data
+	c.msg(resultTime)
 }
